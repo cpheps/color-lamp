@@ -14,17 +14,28 @@ import (
 	"github.com/jmoiron/jsonq"
 )
 
-const serverAddress = "localhost"
-const port = "5000"
-
 const colorEndpoint = "/color"
 const clusterEndpoint = "/cluster"
 
+//LampClient handles connections to a server
+type LampClient struct {
+	serverAddress string
+	port          string
+}
+
+//CreateLampClient creates a new LampClient
+func CreateLampClient(serverAddress, port string) *LampClient {
+	return &LampClient{
+		serverAddress: serverAddress,
+		port:          port,
+	}
+}
+
 //GetClusterColor Retrieves the color from the cluster
-func GetClusterColor(clusterID *string) (*int32, error) {
+func (lc LampClient) GetClusterColor(clusterID *string) (*int32, error) {
 	body := fmt.Sprintf("{\"id\": \"%s\"}", *clusterID)
 
-	response, err := makeRequest(http.MethodGet, colorEndpoint, &body)
+	response, err := lc.makeRequest(http.MethodGet, colorEndpoint, &body)
 	if err != nil {
 		return nil, err
 	} else if response.StatusCode >= 400 {
@@ -50,10 +61,10 @@ func GetClusterColor(clusterID *string) (*int32, error) {
 }
 
 //SetClusterColor sets the color of the given cluster
-func SetClusterColor(clusterID *string, color *int32) error {
+func (lc LampClient) SetClusterColor(clusterID *string, color *int32) error {
 	body := fmt.Sprintf("{\"id\": \"%s\",\"color\": %d}", *clusterID, *color)
 
-	response, err := makeRequest(http.MethodGet, colorEndpoint, &body)
+	response, err := lc.makeRequest(http.MethodPut, colorEndpoint, &body)
 	if err != nil {
 		return err
 	} else if response.StatusCode >= 400 {
@@ -67,8 +78,8 @@ func SetClusterColor(clusterID *string, color *int32) error {
 	return nil
 }
 
-func getServerAddress(endpoint string) string {
-	return fmt.Sprintf("http://%s:%s%s", serverAddress, port, endpoint)
+func (lc LampClient) getServerAddress(endpoint string) string {
+	return fmt.Sprintf("http://%s:%s%s", lc.serverAddress, lc.port, endpoint)
 }
 
 func formatBody(content *string) io.Reader {
@@ -81,8 +92,8 @@ func formatBody(content *string) io.Reader {
 	return bytes.NewReader(buffer.Bytes())
 }
 
-func makeRequest(method, endpoint string, body *string) (*http.Response, error) {
-	request, err := http.NewRequest(method, getServerAddress(endpoint), formatBody(body))
+func (lc LampClient) makeRequest(method, endpoint string, body *string) (*http.Response, error) {
+	request, err := http.NewRequest(method, lc.getServerAddress(endpoint), formatBody(body))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to make %s %s request. Error: %s", method, endpoint, err.Error())
 	}
@@ -93,7 +104,11 @@ func makeRequest(method, endpoint string, body *string) (*http.Response, error) 
 	go func() {
 		select {
 		case <-ctx.Done():
-			fmt.Printf("Timeout of %s %s request.\n", method, endpoint) // prints "context deadline exceeded"
+			err := ctx.Err()
+
+			if err.Error() == "context deadline exceeded" {
+				fmt.Printf("Timeout of %s %s request.\n", method, endpoint) // prints "context deadline exceeded"
+			}
 		}
 	}()
 
