@@ -26,7 +26,13 @@ func GetClusterColor(clusterID *string) (*int32, error) {
 
 	response, err := makeRequest(http.MethodGet, colorEndpoint, &body)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to make GET /color request. Error: %s", err.Error())
+		return nil, err
+	} else if response.StatusCode >= 400 {
+		errorMessage, err := getErrorMessage(response)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("Returned with status code %d, and error message %s", response.StatusCode, *errorMessage)
 	}
 
 	jq, err := parseJSON(response)
@@ -41,6 +47,24 @@ func GetClusterColor(clusterID *string) (*int32, error) {
 
 	color32 := int32(color)
 	return &color32, nil
+}
+
+//SetClusterColor sets the color of the given cluster
+func SetClusterColor(clusterID *string, color *int32) error {
+	body := fmt.Sprintf("{\"id\": \"%s\",\"color\": %d}", *clusterID, *color)
+
+	response, err := makeRequest(http.MethodGet, colorEndpoint, &body)
+	if err != nil {
+		return err
+	} else if response.StatusCode >= 400 {
+		errorMessage, err := getErrorMessage(response)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("Returned with status code %d, and error message %s", response.StatusCode, *errorMessage)
+	}
+
+	return nil
 }
 
 func getServerAddress(endpoint string) string {
@@ -98,4 +122,18 @@ func parseJSON(response *http.Response) (*jsonq.JsonQuery, error) {
 	jq := jsonq.NewQuery(resp)
 
 	return jq, nil
+}
+
+func getErrorMessage(response *http.Response) (*string, error) {
+	jq, err := parseJSON(response)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse error: Error %s", err.Error())
+	}
+
+	errorMessage, err := jq.String("error")
+	if err != nil {
+		return nil, fmt.Errorf("Unable to parse error: Error %s", err.Error())
+	}
+
+	return &errorMessage, nil
 }
