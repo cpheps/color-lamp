@@ -17,7 +17,7 @@ var BuildTime string
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
 
-	ledControl, err := setupLEDControl(ledcontrol.DefaultPin, 16, ledcontrol.FullBrightness)
+	ledControl, err := setupLEDControl()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
@@ -33,7 +33,7 @@ func main() {
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
-	ledControl, err := ledcontrol.CreateLEDControl()
+	ledControl, err := ledcontrol.CreateLEDControl(ledcontrol.DefaultPin, 16, ledcontrol.FullBrightness)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating LEDControl: %s", err.Error())
 	}
