@@ -7,13 +7,15 @@ import (
 )
 
 const (
-	DefaultPin     = 18
+	//DefaultPin is the default GPIO pin on a raspberry pi
+	DefaultPin = 18
+
+	//FullBrightness is the maximum brightness for the LEDs
 	FullBrightness = 255
 )
 
 //LEDControl represents the control module for the LED lights
 type LEDControl struct {
-	ledColor   uint32
 	pin        int
 	ledCount   int
 	brightness int
@@ -22,13 +24,12 @@ type LEDControl struct {
 }
 
 //CreateLEDControl creates a new instance of LEDControl
-func CreateLEDControl(ledColor uint32, pin, ledCount, brightness int) (*LEDControl, error) {
+func CreateLEDControl(pin, ledCount, brightness int) (*LEDControl, error) {
 	if brightness < 0 || brightness > 255 {
 		return nil, errors.New("Brightness must be between 0 and 255")
 	}
 
 	return &LEDControl{
-		ledColor:   ledColor,
 		pin:        pin,
 		ledCount:   ledCount,
 		brightness: brightness,
@@ -57,16 +58,6 @@ func (lc LEDControl) DeInit() error {
 
 	ws2811.Fini()
 	lc.init = false
-}
-
-//SetColor sets the color assigned to this LED Control
-func (lc *LEDControl) SetColor(red uint8, green uint8, blue uint8) {
-	lc.ledColor = uint32(green)<<16 | uint32(red)<<8 | uint32(blue)
-}
-
-//GetColor gets the color of this LED Control
-func (lc LEDControl) GetColor() uint32 {
-	return lc.ledColor
 }
 
 //ChangeStripColor changes the color of the LED Strip
