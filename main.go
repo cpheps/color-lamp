@@ -25,7 +25,7 @@ func main() {
 
 	defer ledControl.DeInit()
 
-	lamp, err := lamp.CreateLamp(uint32(0x020000), uint32(0x020000), ledControl)
+	_, err = lamp.CreateLamp(uint32(0x020000), uint32(0x020000), ledControl)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)

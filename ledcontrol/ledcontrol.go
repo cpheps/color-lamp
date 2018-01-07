@@ -37,7 +37,7 @@ func CreateLEDControl(pin, ledCount, brightness int) (*LEDControl, error) {
 }
 
 //Init initializes the LED Strip
-func (lc LEDControl) Init() error {
+func (lc *LEDControl) Init() error {
 	if lc.init {
 		return errors.New("LED Control already initialized")
 	}
@@ -51,8 +51,8 @@ func (lc LEDControl) Init() error {
 	return nil
 }
 
-//DeInit de-initilizes the LED Strip after use
-func (lc LEDControl) DeInit() error {
+//DeInit de-initializes the LED Strip after use
+func (lc *LEDControl) DeInit() error {
 	if !lc.init {
 		return errors.New("LED Control has not been initialized yet")
 	}
