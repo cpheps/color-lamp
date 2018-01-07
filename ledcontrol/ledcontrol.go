@@ -57,6 +57,7 @@ func (lc *LEDControl) DeInit() error {
 		return errors.New("LED Control has not been initialized yet")
 	}
 
+	ws2811.Clear()
 	ws2811.Fini()
 	lc.init = false
 
