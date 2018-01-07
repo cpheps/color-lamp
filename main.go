@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/cpheps/color-lamp/lamp"
 	"github.com/cpheps/color-lamp/ledcontrol"
@@ -25,11 +26,13 @@ func main() {
 
 	defer ledControl.DeInit()
 
-	_, err = lamp.CreateLamp(uint32(0x020000), uint32(0x020000), ledControl)
+	_, err = lamp.CreateLamp(uint32(0x200000), uint32(0x200000), ledControl)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
+
+	time.Sleep(1 * time.Minute)
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
