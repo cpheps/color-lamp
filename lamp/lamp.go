@@ -42,7 +42,7 @@ func (l *Lamp) SetLampColor(red uint8, green uint8, blue uint8) {
 
 //SetCurrentColor sets the current color of the lamp
 func (l *Lamp) SetCurrentColor(color uint32) error {
-	err := l.ledControl.ChangeStripColor(l.currentColor)
+	err := l.ledControl.ChangeStripColor(color)
 	if err == nil {
 		l.currentColor = color
 	}
