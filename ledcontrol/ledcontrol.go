@@ -48,6 +48,7 @@ func (lc LEDControl) Init() error {
 	}
 
 	lc.init = true
+	return nil
 }
 
 //DeInit de-initilizes the LED Strip after use
@@ -58,6 +59,8 @@ func (lc LEDControl) DeInit() error {
 
 	ws2811.Fini()
 	lc.init = false
+
+	return nil
 }
 
 //ChangeStripColor changes the color of the LED Strip
