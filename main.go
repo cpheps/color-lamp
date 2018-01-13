@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/cpheps/color-lamp/lamp"
 	"github.com/cpheps/color-lamp/ledcontrol"
@@ -18,21 +17,13 @@ var BuildTime string
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
 
-	ledControl, err := setupLEDControl()
+	lamp, err := setupLamp(uint32(0x200000))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
 
-	defer ledControl.DeInit()
-
-	_, err = lamp.CreateLamp(uint32(0x200000), uint32(0x200000), ledControl)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-
-	time.Sleep(1 * time.Minute)
+	defer lamp.TearDown()
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
@@ -47,4 +38,13 @@ func setupLEDControl() (*ledcontrol.LEDControl, error) {
 	}
 
 	return ledControl, nil
+}
+
+func setupLamp(lampColor uint32) (*lamp.Lamp, error) {
+	ledControl, err := setupLEDControl()
+	if err != nil {
+		return nil, err
+	}
+
+	return lamp.CreateLamp(lampColor, lampColor, ledControl)
 }

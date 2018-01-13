@@ -16,7 +16,7 @@ type Lamp struct {
 }
 
 //CreateLamp creates a new lamp object
-//Assumes lamp Init and Deinit is handled outside
+//Assumes LEDControl Init is run before passing in
 func CreateLamp(lampColor, currentColor uint32, ledControl *ledcontrol.LEDControl) (*Lamp, error) {
 	if ledControl == nil {
 		return nil, errors.New("Error creating Lamp, ledControl must not be nil")
@@ -48,4 +48,9 @@ func (l *Lamp) SetCurrentColor(color uint32) error {
 	}
 
 	return err
+}
+
+//TearDown Deinits LEDControl
+func (l Lamp) TearDown() {
+	l.ledControl.Deinit()
 }
