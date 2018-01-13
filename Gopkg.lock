@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/jgarff/rpi_ws281x"
+  packages = ["golang/ws2811"]
+  revision = "3a01777f51bebe412a23350f842fec7b43c00c5a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/jmoiron/jsonq"
   packages = ["."]
   revision = "e874b168d07ecc7808bc950a17998a8aa3141d82"
@@ -10,6 +16,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "95309bfa51feba06e6f0d7815279e3869f167dd5772ac3b15bfa13912ab285fd"
+  inputs-digest = "8f16424da1997072cf245ea24f86d8b2cec661d8c0b55981f928359f0e52e6b0"
   solver-name = "gps-cdcl"
   solver-version = 1
