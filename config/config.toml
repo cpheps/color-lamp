@@ -1,0 +1,9 @@
+
+[lamp]
+  blue = 0
+  green = 0
+  red = 0
+
+[lifeline]
+  hostname = "localhost"
+  port = "8080"
