@@ -1,8 +1,9 @@
-[lifeline]
-hostname = "localhost" #Hostname of life-line server
-port = "8080"          #Port to connect to host
 
 [lamp]
-green = 0  #Green Value of Lamp color
-red = 0    #Red Value of Lamp color
-blue = 0   #Blue Value of Lamp color
+  blue = 0
+  green = 0
+  red = 0
+
+[lifeline]
+  hostname = "localhost"
+  port = "8080"
