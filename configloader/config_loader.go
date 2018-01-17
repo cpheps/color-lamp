@@ -4,6 +4,7 @@ package configloader
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/pelletier/go-toml"
 )
@@ -14,8 +15,9 @@ const (
 
 //LifeLineConfig represents "lifeline" part of config
 type LifeLineConfig struct {
-	HostName string `toml:"hostname"`
-	Port     string `toml:"port"`
+	ClusterID string `toml:"clusterID"`
+	HostName  string `toml:"hostname"`
+	Port      string `toml:"port"`
 }
 
 //LampConfig represents "lamp" part of config
@@ -45,4 +47,19 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return config, nil
+}
+
+//SaveConfig saves configuration file
+func SaveConfig(config *Config) error {
+	data, err := toml.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("Error marshaling config: %s", err.Error())
+	}
+
+	err = ioutil.WriteFile(configFileLocation, data, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("Error saving config file: %s", err.Error())
+	}
+
+	return nil
 }
