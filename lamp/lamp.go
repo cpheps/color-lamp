@@ -35,6 +35,11 @@ func CreateLamp(lampColor, currentColor uint32, ledControl *ledcontrol.LEDContro
 	return lamp, nil
 }
 
+//GetCurrentColor returns the current color
+func (l Lamp) GetCurrentColor() uint32 {
+	return l.currentColor
+}
+
 //SetLampColor sets the color the belongs to this lamp
 func (l *Lamp) SetLampColor(red uint8, green uint8, blue uint8) {
 	l.lampColor = ConvertRGB(red, green, blue)
@@ -52,7 +57,7 @@ func (l *Lamp) SetCurrentColor(color uint32) error {
 
 //TearDown Deinits LEDControl
 func (l Lamp) TearDown() {
-	l.ledControl.Deinit()
+	l.ledControl.DeInit()
 }
 
 //ConvertRGB Converts and RGB color to uint32

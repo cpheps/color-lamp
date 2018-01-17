@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"github.com/cpheps/color-lamp/lampclient"
+	"time"
 
 	"github.com/cpheps/color-lamp/configloader"
 	"github.com/cpheps/color-lamp/lamp"
+	"github.com/cpheps/color-lamp/lampclient"
 	"github.com/cpheps/color-lamp/ledcontrol"
 )
 
@@ -19,21 +19,34 @@ var BuildTime string
 
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
+
+	//Load in config
 	config, err := configloader.LoadConfig()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
 
-	lamp, err = setupLamp(config.LampConfig)
+	//Init Lamp
+	newLamp, err := setupLamp(&config.LampConfig)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
+	defer newLamp.TearDown()
 
-	client := setupClient(config.LifeLineConfig)
+	//Init Client
+	client := setupClient(&config.LifeLineConfig)
 
-	defer lamp.TearDown()
+	//Core loop
+	serverTicker := time.NewTicker(15 * time.Second).C
+
+	for {
+		select {
+		case <-serverTicker:
+			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
+		}
+	}
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
@@ -62,4 +75,21 @@ func setupLamp(config *configloader.LampConfig) (*lamp.Lamp, error) {
 
 func setupClient(config *configloader.LifeLineConfig) *lampclient.LampClient {
 	return lampclient.CreateLampClient(config.HostName, config.Port)
+}
+
+func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID string) {
+	color, err := client.GetClusterColor(clusterID)
+	if err != nil {
+		fmt.Println("Error getting cluster color:", err.Error())
+		return
+	}
+
+	if *color != lamp.GetCurrentColor() {
+		err = lamp.SetCurrentColor(*color)
+		if err != nil {
+			fmt.Println("Error setting Lamp color:", err.Error())
+			return
+		}
+	}
+	fmt.Println("Set Lamp color to:", *color)
 }

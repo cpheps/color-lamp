@@ -32,8 +32,8 @@ func CreateLampClient(serverAddress, port string) *LampClient {
 }
 
 //GetClusterColor Retrieves the color from the cluster
-func (lc LampClient) GetClusterColor(clusterID *string) (*int32, error) {
-	body := fmt.Sprintf("{\"id\": \"%s\"}", *clusterID)
+func (lc LampClient) GetClusterColor(clusterID string) (*uint32, error) {
+	body := fmt.Sprintf("{\"id\": \"%s\"}", clusterID)
 
 	response, err := lc.makeRequest(http.MethodGet, colorEndpoint, &body)
 	if err != nil {
@@ -56,13 +56,13 @@ func (lc LampClient) GetClusterColor(clusterID *string) (*int32, error) {
 		return nil, errors.New("Property 'color' not found in JSON response")
 	}
 
-	color32 := int32(color)
+	color32 := uint32(color)
 	return &color32, nil
 }
 
 //SetClusterColor sets the color of the given cluster
-func (lc LampClient) SetClusterColor(clusterID *string, color *int32) error {
-	body := fmt.Sprintf("{\"id\": \"%s\",\"color\": %d}", *clusterID, *color)
+func (lc LampClient) SetClusterColor(clusterID string, color uint32) error {
+	body := fmt.Sprintf("{\"id\": \"%s\",\"color\": %d}", clusterID, color)
 
 	response, err := lc.makeRequest(http.MethodPut, colorEndpoint, &body)
 	if err != nil {
