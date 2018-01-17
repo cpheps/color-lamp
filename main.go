@@ -78,7 +78,7 @@ func setupClient(config *configloader.LifeLineConfig) *lampclient.LampClient {
 }
 
 func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID string) {
-	color, err := client.GetClusterColor()
+	color, err := client.GetClusterColor(clusterID)
 	if err != nil {
 		fmt.Println("Error getting cluster color:", err.Error())
 		return
