@@ -28,7 +28,7 @@ func main() {
 	}
 
 	//Init Lamp
-	newLamp, err = setupLamp(&config.LampConfig)
+	newLamp, err := setupLamp(&config.LampConfig)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
