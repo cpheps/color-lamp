@@ -28,15 +28,15 @@ func main() {
 	}
 
 	//Init Lamp
-	lamp, err = setupLamp(config.LampConfig)
+	newLamp, err = setupLamp(&config.LampConfig)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-	defer lamp.TearDown()
+	defer newLamp.TearDown()
 
 	//Init Client
-	client := setupClient(config.LifeLineConfig)
+	client := setupClient(&config.LifeLineConfig)
 
 	//Core loop
 	serverTicker := time.NewTicker(15 * time.Second).C
@@ -44,7 +44,7 @@ func main() {
 	for {
 		select {
 		case <-serverTicker:
-			queryAndUpdate(client, lamp, config.LifeLineConfig.ClusterID)
+			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
 		}
 	}
 }
