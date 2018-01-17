@@ -84,12 +84,12 @@ func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID st
 		return
 	}
 
-	if color != lamp.GetCurrentColor() {
-		err = lamp.SetCurrentColor(color)
+	if *color != lamp.GetCurrentColor() {
+		err = lamp.SetCurrentColor(*color)
 		if err != nil {
 			fmt.Println("Error setting Lamp color:", err.Error())
 			return
 		}
 	}
-	fmt.Println("Set Lamp color to:", color)
+	fmt.Println("Set Lamp color to:", *color)
 }
