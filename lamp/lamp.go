@@ -57,7 +57,7 @@ func (l *Lamp) SetCurrentColor(color uint32) error {
 
 //TearDown Deinits LEDControl
 func (l Lamp) TearDown() {
-	l.ledControl.Deinit()
+	l.ledControl.DeInit()
 }
 
 //ConvertRGB Converts and RGB color to uint32
