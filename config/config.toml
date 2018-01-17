@@ -5,6 +5,6 @@
   red = 0
 
 [lifeline]
-  clusterId = "cluster_id"
+  clusterID = "cluster_id"
   hostname = "localhost"
   port = "8080"
