@@ -45,6 +45,11 @@ func (l *Lamp) SetLampColor(red uint8, green uint8, blue uint8) {
 	l.lampColor = ConvertRGB(red, green, blue)
 }
 
+//GetLampColor gets the color that belongs to this lamp
+func (l Lamp) GetLampColor() uint32 {
+	return l.lampColor
+}
+
 //SetCurrentColor sets the current color of the lamp
 func (l *Lamp) SetCurrentColor(color uint32) error {
 	err := l.ledControl.ChangeStripColor(color)

@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cpheps/color-lamp/buttoncontroller"
 	"github.com/cpheps/color-lamp/configloader"
 	"github.com/cpheps/color-lamp/lamp"
 	"github.com/cpheps/color-lamp/lampclient"
@@ -20,19 +21,18 @@ var BuildTime string
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
 
+	//Init buttons
+	toggleButton, err := buttoncontroller.CreateButton(8)
+	checkErr(err)
+	defer buttoncontroller.TearDown()
+
 	//Load in config
 	config, err := configloader.LoadConfig()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	checkErr(err)
 
 	//Init Lamp
 	newLamp, err := setupLamp(&config.LampConfig)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	checkErr(err)
 	defer newLamp.TearDown()
 
 	//Init Client
@@ -40,11 +40,18 @@ func main() {
 
 	//Core loop
 	serverTicker := time.NewTicker(15 * time.Second).C
+	buttonTicker := time.NewTicker(5 * time.Second).C
 
 	for {
 		select {
 		case <-serverTicker:
 			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
+		case <-buttonTicker:
+			if toggleButton.IsPressed() {
+				fmt.Println("Toggle pressed")
+				//Update server
+				//client.SetClusterColor(config.LifeLineConfig.ClusterID, newLamp.GetLampColor())
+			}
 		}
 	}
 }
@@ -92,4 +99,11 @@ func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID st
 		}
 	}
 	fmt.Println("Set Lamp color to:", *color)
+}
+
+func checkErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }
