@@ -35,7 +35,9 @@ func CreateButton(pinNumber uint8) (*Button, error) {
 //IsPressed gets if the button is currently pressed
 func (b Button) IsPressed() bool {
 	//Since pull state is up a button press will give a state of low
-	return b.pin.Read() == rpio.Low
+	state := b.pin.Read()
+	fmt.Println("Button:", state)
+	return state == rpio.Low
 }
 
 //TearDown will deinit the button controller
