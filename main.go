@@ -22,7 +22,7 @@ func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
 
 	//Init buttons
-	toggleButton, err := buttoncontroller.CreateButton(uint8(8))
+	toggleButton, err := buttoncontroller.CreateButton(uint8(32))
 	checkErr(err)
 	defer buttoncontroller.TearDown()
 
@@ -40,7 +40,7 @@ func main() {
 
 	//Core loop
 	serverTicker := time.NewTicker(15 * time.Second).C
-	buttonTicker := time.NewTicker(1 * time.Second).C
+	buttonTicker := time.NewTicker(100 * time.Millisecond).C
 
 	for {
 		select {
