@@ -14,10 +14,10 @@
   revision = "e874b168d07ecc7808bc950a17998a8aa3141d82"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "0131db6d737cfbbfb678f8b7d92e55e27ce46224"
+  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"

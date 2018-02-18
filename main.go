@@ -24,7 +24,15 @@ func main() {
 	//Init buttons
 	toggleButton, err := buttoncontroller.CreateButton(uint8(32))
 	checkErr(err)
-	defer buttoncontroller.TearDown()
+
+	closeChan := make(chan bool)
+	go buttoncontroller.HandleButton(toggleButton, <-closeChan)
+
+	defer func() {
+		closeChan <- true
+		buttoncontroller.TearDown()
+		close(closeChan)
+	}()
 
 	//Load in config
 	config, err := configloader.LoadConfig()
@@ -40,18 +48,11 @@ func main() {
 
 	//Core loop
 	serverTicker := time.NewTicker(15 * time.Second).C
-	buttonTicker := time.NewTicker(100 * time.Millisecond).C
 
 	for {
 		select {
 		case <-serverTicker:
 			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
-		case <-buttonTicker:
-			if toggleButton.IsPressed() {
-				fmt.Println("Toggle pressed")
-				//Update server
-				//client.SetClusterColor(config.LifeLineConfig.ClusterID, newLamp.GetLampColor())
-			}
 		}
 	}
 }
