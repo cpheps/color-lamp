@@ -32,6 +32,7 @@ func HandleButton(b *Button, closeChan <-chan bool) {
 			switch buttonState {
 			case idle:
 				if b.IsPressed() {
+					fmt.Println("down press")
 					buttonState = pressed
 					pressStart = time.Now()
 				}
@@ -47,6 +48,7 @@ func HandleButton(b *Button, closeChan <-chan bool) {
 				}
 			case hold:
 				if !b.IsPressed() {
+					fmt.Println("Hold release")
 					buttonState = idle
 				}
 			}

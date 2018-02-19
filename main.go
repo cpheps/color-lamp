@@ -22,11 +22,11 @@ func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
 
 	//Init buttons
-	toggleButton, err := buttoncontroller.CreateButton(uint8(32))
+	toggleButton, err := buttoncontroller.CreateButton(uint8(21))
 	checkErr(err)
 
 	closeChan := make(chan bool)
-	go buttoncontroller.HandleButton(toggleButton, <-closeChan)
+	go buttoncontroller.HandleButton(toggleButton, closeChan)
 
 	defer func() {
 		closeChan <- true
