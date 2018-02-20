@@ -6,11 +6,20 @@ import (
 	"github.com/stianeikeland/go-rpio"
 )
 
+type state int
+
+const (
+	idle state = iota
+	pressed
+	coolDown
+)
+
 var isInitialized = false
 
 //Button represents a single button on a pin
 type Button struct {
-	pin rpio.Pin
+	pin         rpio.Pin
+	buttonState state
 }
 
 //CreateButton Creates a new putton on the given pin
@@ -28,7 +37,8 @@ func CreateButton(pinNumber uint8) (*Button, error) {
 	pin.PullUp()
 
 	return &Button{
-		pin: rpio.Pin(pinNumber),
+		pin:         rpio.Pin(pinNumber),
+		buttonState: idle,
 	}, nil
 }
 

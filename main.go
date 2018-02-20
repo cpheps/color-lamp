@@ -20,19 +20,13 @@ var BuildTime string
 
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
-
-	//Init buttons
-	toggleButton, err := buttoncontroller.CreateButton(uint8(21))
-	checkErr(err)
-
 	closeChan := make(chan bool)
-	go buttoncontroller.HandleButton(toggleButton, closeChan)
-
 	defer func() {
 		closeChan <- true
-		buttoncontroller.TearDown()
 		close(closeChan)
 	}()
+
+	eventChan := setupButton(closeChan)
 
 	//Load in config
 	config, err := configloader.LoadConfig()
@@ -100,6 +94,14 @@ func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID st
 		}
 	}
 	fmt.Println("Set Lamp color to:", *color)
+}
+
+func setupButton(closeChan <-chan bool) <-chan buttoncontroller.ButtonEvent {
+	//Init buttons
+	toggleButton, err := buttoncontroller.CreateButton(uint8(21))
+	checkErr(err)
+
+	return buttoncontroller.HandleButton(toggleButton, closeChan)
 }
 
 func checkErr(err error) {

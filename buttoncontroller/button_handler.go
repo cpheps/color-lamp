@@ -1,21 +1,34 @@
 package buttoncontroller
 
 import (
-	"fmt"
 	"time"
 )
 
-type state int
+//ButtonEvent is a type of event when a button is pressed
+type ButtonEvent int
 
 const (
-	idle state = iota
-	pressed
-	hold
+	//PressedEvent signals a button press
+	PressedEvent ButtonEvent = iota
+
+	//HoldEvent signals a hold of over 5 seconds
+	HoldEvent
 )
 
 //HandleButton controls button IO
-//meant to be run as separate goroutine
-func HandleButton(b *Button, closeChan <-chan bool) {
+//
+//Starts a separate goroutine to handle button IO.
+//Communicates over channel
+//On closing will handle button TearDown
+func HandleButton(b *Button, closeChan <-chan bool) <-chan ButtonEvent {
+	eventChan := make(chan ButtonEvent)
+
+	go buttonLoop(b, eventChan, closeChan)
+
+	return eventChan
+}
+
+func buttonLoop(b *Button, eventChan chan ButtonEvent, closeChan <-chan bool) {
 	buttonTicker := time.NewTicker(100 * time.Millisecond)
 	var pressStart time.Time
 
@@ -23,34 +36,33 @@ func HandleButton(b *Button, closeChan <-chan bool) {
 
 	for {
 		select {
-		case close := <-closeChan:
-			if close {
+		case closing := <-closeChan:
+			if closing {
 				buttonTicker.Stop()
+				TearDown()
+				close(eventChan)
 				return
 			}
 		case <-buttonTicker.C:
 			switch buttonState {
 			case idle:
 				if b.IsPressed() {
-					fmt.Println("down press")
-					buttonState = pressed
+					b.buttonState = pressed
 					pressStart = time.Now()
 				}
 			case pressed:
 				if b.IsPressed() {
-					if secondsHeld := time.Now().Sub(pressStart) * time.Second; secondsHeld >= 3 {
-						buttonState = hold
-						fmt.Println("Button Hold")
+					if secondsHeld := time.Now().Sub(pressStart) * time.Second; secondsHeld >= (5 * time.Second) {
+						b.buttonState = coolDown
+						eventChan <- HoldEvent
 					}
 				} else {
-					buttonState = idle
-					fmt.Println("Button pressed")
+					b.buttonState = coolDown
+					eventChan <- PressedEvent
 				}
-			case hold:
-				if !b.IsPressed() {
-					fmt.Println("Hold release")
-					buttonState = idle
-				}
+			case coolDown:
+				<-time.NewTimer(3 * time.Second).C
+				b.buttonState = idle
 			}
 		}
 	}
