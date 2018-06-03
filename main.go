@@ -43,10 +43,33 @@ func main() {
 	//Core loop
 	serverTicker := time.NewTicker(15 * time.Second).C
 
+	//Signals if button press should override server read for next cycle.
+	//Stops the case of pushing the button on this lamp and reading from the server
+	//before the server is updated.
+	override := false
+
 	for {
 		select {
 		case <-serverTicker:
+			//If we overriding skip checking the server
+			if override {
+				override = false
+				continue
+			}
 			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
+		case event := <-eventChan:
+			if event == buttoncontroller.PressedEvent {
+				client.SetClusterColor(config.LifeLineConfig.ClusterID, newLamp.GetLampColor())
+				err := newLamp.SetCurrentColor(newLamp.GetLampColor())
+				if err != nil {
+					fmt.Println("Error setting Lamp color:", err.Error())
+				} else {
+					override = true
+				}
+			}
+
+			//If not press then hold
+			//TODO do shutdown
 		}
 	}
 }
