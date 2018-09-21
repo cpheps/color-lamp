@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/cpheps/color-lamp/buttoncontroller"
@@ -66,10 +67,14 @@ func main() {
 				} else {
 					override = true
 				}
+				continue
 			}
 
 			//If not press then hold
-			//TODO do shutdown
+			// run shutdown command in defer so lamp clean up happens.
+			cmd := "sudo shutdown -h now"
+			defer exec.Command("/bin/sh", "-c", cmd).Run()
+			return
 		}
 	}
 }
@@ -127,9 +132,11 @@ func setupButton(closeChan <-chan bool) <-chan buttoncontroller.ButtonEvent {
 	return buttoncontroller.HandleButton(toggleButton, closeChan)
 }
 
+// TODO change this logic so it doesn't exit on a failure. Rather log
+// all failures and continue on if possible
 func checkErr(err error) {
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(-1)
+		os.Exit(1)
 	}
 }
