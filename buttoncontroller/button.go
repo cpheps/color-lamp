@@ -26,7 +26,7 @@ type Button struct {
 func CreateButton(pinNumber uint8) (*Button, error) {
 	if !isInitialized {
 		if err := rpio.Open(); err != nil {
-			return nil, fmt.Errorf("Unable to initialize GPIO: %s", err.Error())
+			return nil, fmt.Errorf("unable to initialize GPIO: %s", err.Error())
 		}
 
 		isInitialized = true
@@ -50,6 +50,5 @@ func (b Button) IsPressed() bool {
 
 //TearDown will deinit the button controller
 func TearDown() error {
-	fmt.Println("closing button")
 	return rpio.Close()
 }

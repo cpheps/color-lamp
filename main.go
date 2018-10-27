@@ -53,9 +53,7 @@ func main() {
 		select {
 		case <-sigChan:
 			fmt.Println("Received interrupt")
-			newLamp.TearDown()
-			closeChan <- true
-			wg.Wait()
+			cleanup(&wg, newLamp, closeChan)
 			return
 		case <-serverTicker:
 			//If we overriding skip checking the server
@@ -80,6 +78,7 @@ func main() {
 			// run shutdown command in defer so lamp clean up happens.
 			cmd := "sudo shutdown -h now"
 			defer exec.Command("/bin/sh", "-c", cmd).Run()
+			cleanup(&wg, newLamp, closeChan)
 			return
 		}
 	}
@@ -89,6 +88,12 @@ func setupSignalList() <-chan os.Signal {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
 	return sigChan
+}
+
+func cleanup(wg *sync.WaitGroup, newLamp *lamp.Lamp, closeChan <-chan bool) {
+	newLamp.TearDown()
+	closeChan <- true
+	wg.Wait()
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
