@@ -58,6 +58,7 @@ func (lc *LEDControl) DeInit() error {
 	}
 
 	ws2811.Clear()
+	ws2811.Render()
 	ws2811.Fini()
 	lc.init = false
 

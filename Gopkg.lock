@@ -14,14 +14,20 @@
   revision = "e874b168d07ecc7808bc950a17998a8aa3141d82"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "0131db6d737cfbbfb678f8b7d92e55e27ce46224"
+  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
+  version = "v1.1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/stianeikeland/go-rpio"
+  packages = ["."]
+  revision = "f6236e58667c16a237d2916b379b4337460b555b"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f7508f3ce3a4772de02ccefff8f3c3924d2e4b840ec087208d59bdcb520f6e46"
+  inputs-digest = "4da77cd8d588500b37e29e5e1502d9f88777a4ce7af44bc12d38ed7fb771d522"
   solver-name = "gps-cdcl"
   solver-version = 1

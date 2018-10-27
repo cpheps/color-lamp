@@ -31,3 +31,7 @@
 [[constraint]]
     name = "github.com/pelletier/go-toml"
     branch = "master"
+
+[[constraint]]
+    name = "github.com/stianeikeland/go-rpio"
+    branch = "master"

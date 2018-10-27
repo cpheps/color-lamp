@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"os/signal"
+	"sync"
 	"time"
 
+	"github.com/cpheps/color-lamp/buttoncontroller"
 	"github.com/cpheps/color-lamp/configloader"
 	"github.com/cpheps/color-lamp/lamp"
 	"github.com/cpheps/color-lamp/lampclient"
@@ -19,21 +23,17 @@ var BuildTime string
 
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
+	var wg sync.WaitGroup
+	closeChan := make(chan bool, 1)
+	eventChan := setupButton(closeChan, &wg)
 
 	//Load in config
 	config, err := configloader.LoadConfig()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	checkErr(err)
 
 	//Init Lamp
 	newLamp, err := setupLamp(&config.LampConfig)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-	defer newLamp.TearDown()
+	checkErr(err)
 
 	//Init Client
 	client := setupClient(&config.LifeLineConfig)
@@ -41,12 +41,60 @@ func main() {
 	//Core loop
 	serverTicker := time.NewTicker(15 * time.Second).C
 
+	//Signals if button press should override server read for next cycle.
+	//Stops the case of pushing the button on this lamp and reading from the server
+	//before the server is updated.
+	override := false
+
+	// Listening for interrupt
+	sigChan := setupSignalList()
+
 	for {
 		select {
+		case <-sigChan:
+			fmt.Println("Received interrupt")
+			cleanup(&wg, newLamp, closeChan)
+			return
 		case <-serverTicker:
+			//If we overriding skip checking the server
+			if override {
+				override = false
+				continue
+			}
 			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
+		case event := <-eventChan:
+			if event == buttoncontroller.PressedEvent {
+				client.SetClusterColor(config.LifeLineConfig.ClusterID, newLamp.GetLampColor())
+				err := newLamp.SetCurrentColor(newLamp.GetLampColor())
+				if err != nil {
+					fmt.Println("Error setting Lamp color:", err.Error())
+				} else {
+					override = true
+				}
+				continue
+			}
+
+			// If not press then hold
+			// run shutdown command in defer so lamp clean up happens.
+			fmt.Println("Shutting down")
+			cmd := "sudo shutdown -h now"
+			defer exec.Command("/bin/sh", "-c", cmd).Run()
+			cleanup(&wg, newLamp, closeChan)
+			return
 		}
 	}
+}
+
+func setupSignalList() <-chan os.Signal {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+	return sigChan
+}
+
+func cleanup(wg *sync.WaitGroup, newLamp *lamp.Lamp, closeChan chan<- bool) {
+	newLamp.TearDown()
+	closeChan <- true
+	wg.Wait()
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
@@ -92,4 +140,21 @@ func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID st
 		}
 	}
 	fmt.Println("Set Lamp color to:", *color)
+}
+
+func setupButton(closeChan <-chan bool, wg *sync.WaitGroup) <-chan buttoncontroller.ButtonEvent {
+	//Init buttons
+	toggleButton, err := buttoncontroller.CreateButton(uint8(3))
+	checkErr(err)
+
+	return buttoncontroller.HandleButton(toggleButton, closeChan, wg)
+}
+
+// TODO change this logic so it doesn't exit on a failure. Rather log
+// all failures and continue on if possible
+func checkErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
