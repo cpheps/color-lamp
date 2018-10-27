@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"sync"
 	"time"
 
 	"github.com/cpheps/color-lamp/buttoncontroller"
@@ -22,13 +23,9 @@ var BuildTime string
 
 func main() {
 	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
-	closeChan := make(chan bool)
-	defer func() {
-		closeChan <- true
-		close(closeChan)
-	}()
-
-	eventChan := setupButton(closeChan)
+	var wg sync.WaitGroup
+	closeChan := make(chan bool, 1)
+	eventChan := setupButton(closeChan, &wg)
 
 	//Load in config
 	config, err := configloader.LoadConfig()
@@ -37,7 +34,6 @@ func main() {
 	//Init Lamp
 	newLamp, err := setupLamp(&config.LampConfig)
 	checkErr(err)
-	defer newLamp.TearDown()
 
 	//Init Client
 	client := setupClient(&config.LifeLineConfig)
@@ -55,8 +51,11 @@ func main() {
 
 	for {
 		select {
-		case <-signChan:
+		case <-sigChan:
 			fmt.Println("Received interrupt")
+			newLamp.TearDown()
+			closeChan <- true
+			wg.Wait()
 			return
 		case <-serverTicker:
 			//If we overriding skip checking the server
@@ -137,12 +136,12 @@ func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID st
 	fmt.Println("Set Lamp color to:", *color)
 }
 
-func setupButton(closeChan <-chan bool) <-chan buttoncontroller.ButtonEvent {
+func setupButton(closeChan <-chan bool, wg *sync.WaitGroup) <-chan buttoncontroller.ButtonEvent {
 	//Init buttons
 	toggleButton, err := buttoncontroller.CreateButton(uint8(21))
 	checkErr(err)
 
-	return buttoncontroller.HandleButton(toggleButton, closeChan)
+	return buttoncontroller.HandleButton(toggleButton, closeChan, wg)
 }
 
 // TODO change this logic so it doesn't exit on a failure. Rather log

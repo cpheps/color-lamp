@@ -1,6 +1,7 @@
 package buttoncontroller
 
 import (
+	"sync"
 	"time"
 )
 
@@ -20,19 +21,19 @@ const (
 //Starts a separate goroutine to handle button IO.
 //Communicates over channel
 //On closing will handle button TearDown
-func HandleButton(b *Button, closeChan <-chan bool) <-chan ButtonEvent {
-	eventChan := make(chan ButtonEvent)
+func HandleButton(b *Button, closeChan <-chan bool, wg *sync.WaitGroup) <-chan ButtonEvent {
+	eventChan := make(chan ButtonEvent, 1)
 
-	go buttonLoop(b, eventChan, closeChan)
+	wg.Add(1)
+	go buttonLoop(b, eventChan, closeChan, wg)
 
 	return eventChan
 }
 
-func buttonLoop(b *Button, eventChan chan ButtonEvent, closeChan <-chan bool) {
+func buttonLoop(b *Button, eventChan chan ButtonEvent, closeChan <-chan bool, wg *sync.WaitGroup) {
+	defer wg.Done()
 	buttonTicker := time.NewTicker(100 * time.Millisecond)
 	var pressStart time.Time
-
-	buttonState := idle
 
 	for {
 		select {
@@ -40,11 +41,10 @@ func buttonLoop(b *Button, eventChan chan ButtonEvent, closeChan <-chan bool) {
 			if closing {
 				buttonTicker.Stop()
 				TearDown()
-				close(eventChan)
 				return
 			}
 		case <-buttonTicker.C:
-			switch buttonState {
+			switch b.buttonState {
 			case idle:
 				if b.IsPressed() {
 					b.buttonState = pressed
@@ -52,7 +52,7 @@ func buttonLoop(b *Button, eventChan chan ButtonEvent, closeChan <-chan bool) {
 				}
 			case pressed:
 				if b.IsPressed() {
-					if secondsHeld := time.Now().Sub(pressStart) * time.Second; secondsHeld >= (5 * time.Second) {
+					if secondsHeld := time.Since(pressStart); secondsHeld.Seconds() >= 5 {
 						b.buttonState = coolDown
 						eventChan <- HoldEvent
 					}
@@ -61,7 +61,7 @@ func buttonLoop(b *Button, eventChan chan ButtonEvent, closeChan <-chan bool) {
 					eventChan <- PressedEvent
 				}
 			case coolDown:
-				<-time.NewTimer(3 * time.Second).C
+				<-time.NewTimer(5 * time.Second).C
 				b.buttonState = idle
 			}
 		}

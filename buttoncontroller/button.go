@@ -50,5 +50,6 @@ func (b Button) IsPressed() bool {
 
 //TearDown will deinit the button controller
 func TearDown() error {
+	fmt.Println("closing button")
 	return rpio.Close()
 }
