@@ -76,6 +76,7 @@ func main() {
 
 			// If not press then hold
 			// run shutdown command in defer so lamp clean up happens.
+			fmt.Println("Shutting down")
 			cmd := "sudo shutdown -h now"
 			defer exec.Command("/bin/sh", "-c", cmd).Run()
 			cleanup(&wg, newLamp, closeChan)
@@ -90,7 +91,7 @@ func setupSignalList() <-chan os.Signal {
 	return sigChan
 }
 
-func cleanup(wg *sync.WaitGroup, newLamp *lamp.Lamp, closeChan <-chan bool) {
+func cleanup(wg *sync.WaitGroup, newLamp *lamp.Lamp, closeChan chan<- bool) {
 	newLamp.TearDown()
 	closeChan <- true
 	wg.Wait()
@@ -143,7 +144,7 @@ func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID st
 
 func setupButton(closeChan <-chan bool, wg *sync.WaitGroup) <-chan buttoncontroller.ButtonEvent {
 	//Init buttons
-	toggleButton, err := buttoncontroller.CreateButton(uint8(21))
+	toggleButton, err := buttoncontroller.CreateButton(uint8(3))
 	checkErr(err)
 
 	return buttoncontroller.HandleButton(toggleButton, closeChan, wg)
