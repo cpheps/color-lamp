@@ -14,8 +14,7 @@ import (
 	"github.com/jmoiron/jsonq"
 )
 
-const colorEndpoint = "/color"
-const clusterEndpoint = "/cluster"
+const colorEndpoint = "/v1/cluster/%s/color"
 
 //LampClient handles connections to a server
 type LampClient struct {
@@ -32,10 +31,8 @@ func CreateLampClient(serverAddress, port string) *LampClient {
 }
 
 //GetClusterColor Retrieves the color from the cluster
-func (lc LampClient) GetClusterColor(clusterID string) (*uint32, error) {
-	body := fmt.Sprintf("{\"id\": \"%s\"}", clusterID)
-
-	response, err := lc.makeRequest(http.MethodGet, colorEndpoint, &body)
+func (lc LampClient) GetClusterColor(clusterName string) (*uint32, error) {
+	response, err := lc.makeRequest(http.MethodGet, fmt.Sprintf(colorEndpoint, clusterName), nil)
 	if err != nil {
 		return nil, err
 	} else if response.StatusCode >= 400 {
@@ -61,10 +58,10 @@ func (lc LampClient) GetClusterColor(clusterID string) (*uint32, error) {
 }
 
 //SetClusterColor sets the color of the given cluster
-func (lc LampClient) SetClusterColor(clusterID string, color uint32) error {
-	body := fmt.Sprintf("{\"id\": \"%s\",\"color\": %d}", clusterID, color)
+func (lc LampClient) SetClusterColor(clusterName string, color uint32) error {
+	body := fmt.Sprintf("{\"color\": %d}", color)
 
-	response, err := lc.makeRequest(http.MethodPut, colorEndpoint, &body)
+	response, err := lc.makeRequest(http.MethodPut, fmt.Sprintf(colorEndpoint, clusterName), &body)
 	if err != nil {
 		return err
 	} else if response.StatusCode >= 400 {
