@@ -58,7 +58,9 @@ func main() {
 			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterName)
 		case event := <-eventChan:
 			if event == buttoncontroller.PressedEvent {
-				client.SetClusterColor(config.LifeLineConfig.ClusterName, newLamp.GetLampColor())
+				if err := client.SetClusterColor(config.LifeLineConfig.ClusterName, newLamp.GetLampColor()); err != nil {
+					fmt.Println("Error setting cluster color:", err.Error())
+				}
 				err := newLamp.SetCurrentColor(newLamp.GetLampColor())
 				if err != nil {
 					fmt.Println("Error setting Lamp color:", err.Error())
