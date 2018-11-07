@@ -27,7 +27,7 @@ func CreateLampClient(serverAddress, port string) *LampClient {
 
 //GetClusterColor Retrieves the color from the cluster
 func (lc LampClient) GetClusterColor(clusterName string) (*uint32, error) {
-	req, err := lc.newRequest(fmt.Sprintf(colorEndpoint, clusterName), http.MethodGet, nil)
+	req, err := lc.newRequest(lc.getServerAddress(fmt.Sprintf(colorEndpoint, clusterName)), http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (lc LampClient) SetClusterColor(clusterName string, color uint32) error {
 		Color: color,
 	}
 
-	req, err := lc.newRequest(fmt.Sprintf(colorEndpoint, clusterName), http.MethodPut, message)
+	req, err := lc.newRequest(lc.getServerAddress(fmt.Sprintf(colorEndpoint, clusterName)), http.MethodPut, message)
 	if err != nil {
 		return err
 	}
