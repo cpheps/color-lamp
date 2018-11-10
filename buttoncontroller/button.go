@@ -1,7 +1,7 @@
 package buttoncontroller
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/stianeikeland/go-rpio"
 )
@@ -26,7 +26,8 @@ type Button struct {
 func CreateButton(pinNumber uint8) (*Button, error) {
 	if !isInitialized {
 		if err := rpio.Open(); err != nil {
-			return nil, fmt.Errorf("unable to initialize GPIO: %s", err.Error())
+			log.Printf("unable to initialize GPIO: %s", err.Error())
+			return nil, err
 		}
 
 		isInitialized = true

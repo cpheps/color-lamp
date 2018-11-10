@@ -2,7 +2,7 @@ package lamp
 
 import (
 	"errors"
-	"fmt"
+	"log"
 
 	"github.com/cpheps/color-lamp/ledcontrol"
 )
@@ -19,7 +19,7 @@ type Lamp struct {
 //Assumes LEDControl Init is run before passing in
 func CreateLamp(lampColor, currentColor uint32, ledControl *ledcontrol.LEDControl) (*Lamp, error) {
 	if ledControl == nil {
-		return nil, errors.New("Error creating Lamp, ledControl must not be nil")
+		return nil, errors.New("ledControl must not be nil")
 	}
 
 	lamp := &Lamp{
@@ -29,7 +29,8 @@ func CreateLamp(lampColor, currentColor uint32, ledControl *ledcontrol.LEDContro
 
 	err := lamp.SetCurrentColor(currentColor)
 	if err != nil {
-		return nil, fmt.Errorf("Error setting Lamp, color on startup: %s", err.Error())
+		log.Printf("Error setting Lamp, color on startup: %s", err.Error())
+		return nil, err
 	}
 
 	return lamp, nil

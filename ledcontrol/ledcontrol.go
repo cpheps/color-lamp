@@ -26,7 +26,7 @@ type LEDControl struct {
 //CreateLEDControl creates a new instance of LEDControl
 func CreateLEDControl(pin, ledCount, brightness int) (*LEDControl, error) {
 	if brightness < 0 || brightness > 255 {
-		return nil, errors.New("Brightness must be between 0 and 255")
+		return nil, errors.New("brightness must be between 0 and 255")
 	}
 
 	return &LEDControl{
