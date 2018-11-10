@@ -3,31 +3,35 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:bb8cadef175052187c111a4fdeb5923d09cbd9b143063ab6c87ace7f354ee45f"
   name = "github.com/jgarff/rpi_ws281x"
   packages = ["golang/ws2811"]
+  pruneopts = ""
   revision = "3a01777f51bebe412a23350f842fec7b43c00c5a"
 
 [[projects]]
   branch = "master"
-  name = "github.com/jmoiron/jsonq"
-  packages = ["."]
-  revision = "e874b168d07ecc7808bc950a17998a8aa3141d82"
-
-[[projects]]
+  digest = "1:e17aeaf09dfb513ed749acba79eceba3dbdef57f9072b3c2deb75e1e06a08da7"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
-  revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
-  version = "v1.1.0"
+  pruneopts = ""
+  revision = "81a861c69d25a841d0c4394f0e6f84bc8c5afae0"
 
 [[projects]]
   branch = "master"
+  digest = "1:8d5ac6e2117127a860971b603fe12b4bcb4fcf7e0c0540d531feb59fa3857f38"
   name = "github.com/stianeikeland/go-rpio"
   packages = ["."]
+  pruneopts = ""
   revision = "f6236e58667c16a237d2916b379b4337460b555b"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4da77cd8d588500b37e29e5e1502d9f88777a4ce7af44bc12d38ed7fb771d522"
+  input-imports = [
+    "github.com/jgarff/rpi_ws281x/golang/ws2811",
+    "github.com/pelletier/go-toml",
+    "github.com/stianeikeland/go-rpio",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

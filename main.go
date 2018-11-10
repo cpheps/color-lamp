@@ -15,14 +15,8 @@ import (
 	"github.com/cpheps/color-lamp/ledcontrol"
 )
 
-//Version current version of the Lamp Life Line server
-var Version string
-
-//BuildTime build time of binary
-var BuildTime string
-
 func main() {
-	fmt.Printf("Running Color Lamp version %s build on %s\n", Version, BuildTime)
+	fmt.Printf("Running Color Lamp version")
 	var wg sync.WaitGroup
 	closeChan := make(chan bool, 1)
 	eventChan := setupButton(closeChan, &wg)
@@ -61,10 +55,12 @@ func main() {
 				override = false
 				continue
 			}
-			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterID)
+			queryAndUpdate(client, newLamp, config.LifeLineConfig.ClusterName)
 		case event := <-eventChan:
 			if event == buttoncontroller.PressedEvent {
-				client.SetClusterColor(config.LifeLineConfig.ClusterID, newLamp.GetLampColor())
+				if err := client.SetClusterColor(config.LifeLineConfig.ClusterName, newLamp.GetLampColor()); err != nil {
+					fmt.Println("Error setting cluster color:", err.Error())
+				}
 				err := newLamp.SetCurrentColor(newLamp.GetLampColor())
 				if err != nil {
 					fmt.Println("Error setting Lamp color:", err.Error())

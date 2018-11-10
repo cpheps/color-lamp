@@ -21,10 +21,6 @@
 #  version = "2.4.0"
 
 [[constraint]]
-    name = "github.com/jmoiron/jsonq"
-    branch = "master"
-
-[[constraint]]
     name = "github.com/jgarff/rpi_ws281x"
     branch = "master"
 

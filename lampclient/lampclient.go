@@ -2,20 +2,14 @@ package lampclient
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
-
-	"github.com/jmoiron/jsonq"
 )
 
-const colorEndpoint = "/color"
-const clusterEndpoint = "/cluster"
+const colorEndpoint = "/v1/cluster/%s/color"
 
 //LampClient handles connections to a server
 type LampClient struct {
@@ -32,123 +26,99 @@ func CreateLampClient(serverAddress, port string) *LampClient {
 }
 
 //GetClusterColor Retrieves the color from the cluster
-func (lc LampClient) GetClusterColor(clusterID string) (*uint32, error) {
-	body := fmt.Sprintf("{\"id\": \"%s\"}", clusterID)
-
-	response, err := lc.makeRequest(http.MethodGet, colorEndpoint, &body)
-	if err != nil {
-		return nil, err
-	} else if response.StatusCode >= 400 {
-		errorMessage, err := getErrorMessage(response)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("Returned with status code %d, and error message %s", response.StatusCode, *errorMessage)
-	}
-
-	jq, err := parseJSON(response)
+func (lc LampClient) GetClusterColor(clusterName string) (*uint32, error) {
+	req, err := lc.newRequest(lc.getServerAddress(fmt.Sprintf(colorEndpoint, clusterName)), http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	color, err := jq.Int("color")
-	if err != nil {
-		return nil, errors.New("Property 'color' not found in JSON response")
+	message := new(colorMessage)
+	if _, err := lc.do(req, message); err != nil {
+		return nil, err
 	}
 
-	color32 := uint32(color)
-	return &color32, nil
+	return &message.Color, nil
 }
 
 //SetClusterColor sets the color of the given cluster
-func (lc LampClient) SetClusterColor(clusterID string, color uint32) error {
-	body := fmt.Sprintf("{\"id\": \"%s\",\"color\": %d}", clusterID, color)
-
-	response, err := lc.makeRequest(http.MethodPut, colorEndpoint, &body)
-	if err != nil {
-		return err
-	} else if response.StatusCode >= 400 {
-		errorMessage, err := getErrorMessage(response)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("Returned with status code %d, and error message %s", response.StatusCode, *errorMessage)
+func (lc LampClient) SetClusterColor(clusterName string, color uint32) error {
+	message := &colorMessage{
+		Color: color,
 	}
 
-	return nil
+	req, err := lc.newRequest(lc.getServerAddress(fmt.Sprintf(colorEndpoint, clusterName)), http.MethodPut, message)
+	if err != nil {
+		return err
+	}
+
+	_, err = lc.do(req, nil)
+	return err
 }
 
 func (lc LampClient) getServerAddress(endpoint string) string {
 	return fmt.Sprintf("http://%s:%s%s", lc.serverAddress, lc.port, endpoint)
 }
 
-func formatBody(content *string) io.Reader {
-	if content == nil {
+func (lc LampClient) newRequest(url, method string, body interface{}) (*http.Request, error) {
+	var buff io.ReadWriter
+	if body != nil {
+		data, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+
+		buff = bytes.NewBuffer(data)
+	}
+
+	req, err := http.NewRequest(method, url, buff)
+	if err != nil {
+		return nil, err
+	}
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	return req, nil
+}
+
+// do sends an API request and returns and API response. The API response
+// is JSON decoded and stored in the value pointed to by v, or returned
+// as an error if an API error occurred.
+func (lc LampClient) do(req *http.Request, v interface{}) (*http.Response, error) {
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	err = checkResponse(resp)
+	if err != nil {
+		return resp, err
+	}
+
+	if v != nil {
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return resp, err
+		}
+
+		err = json.Unmarshal(data, v)
+	}
+
+	return resp, err
+}
+
+func checkResponse(resp *http.Response) error {
+	if resp.StatusCode < 400 {
 		return nil
 	}
 
-	var buffer bytes.Buffer
-	buffer.WriteString(*content)
-	return bytes.NewReader(buffer.Bytes())
-}
-
-func (lc LampClient) makeRequest(method, endpoint string, body *string) (*http.Response, error) {
-	request, err := http.NewRequest(method, lc.getServerAddress(endpoint), formatBody(body))
-	if err != nil {
-		return nil, fmt.Errorf("Unable to make %s %s request. Error: %s", method, endpoint, err.Error())
+	errorResponse := &errorResponse{Response: resp}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err == nil && data != nil {
+		json.Unmarshal(data, errorResponse)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			err := ctx.Err()
-
-			if err.Error() == "context deadline exceeded" {
-				fmt.Printf("Timeout of %s %s request.\n", method, endpoint) // prints "context deadline exceeded"
-			}
-		}
-	}()
-
-	request = request.WithContext(ctx)
-	resp, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to make %s %s request. Error: %s", method, endpoint, err.Error())
-	}
-
-	return resp, nil
-}
-
-func parseJSON(response *http.Response) (*jsonq.JsonQuery, error) {
-
-	resp := make(map[string]interface{})
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing JSON. Error: %s", err.Error())
-	}
-
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing JSON. Error: %s", err.Error())
-	}
-
-	jq := jsonq.NewQuery(resp)
-
-	return jq, nil
-}
-
-func getErrorMessage(response *http.Response) (*string, error) {
-	jq, err := parseJSON(response)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse error: Error %s", err.Error())
-	}
-
-	errorMessage, err := jq.String("error")
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse error: Error %s", err.Error())
-	}
-
-	return &errorMessage, nil
+	return errorResponse
 }

@@ -15,9 +15,9 @@ const (
 
 //LifeLineConfig represents "lifeline" part of config
 type LifeLineConfig struct {
-	ClusterID string `toml:"clusterID"`
-	HostName  string `toml:"hostname"`
-	Port      string `toml:"port"`
+	ClusterName string `toml:"clusterName"`
+	HostName    string `toml:"hostname"`
+	Port        string `toml:"port"`
 }
 
 //LampConfig represents "lamp" part of config
