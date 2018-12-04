@@ -11,6 +11,7 @@ import (
 
 const (
 	configFileLocation = "./config/config.toml"
+	configFileENV      = "LAMP_CONFIG"
 )
 
 //LifeLineConfig represents "lifeline" part of config
@@ -35,7 +36,7 @@ type Config struct {
 
 //LoadConfig loads configuration file
 func LoadConfig() (*Config, error) {
-	data, err := ioutil.ReadFile(configFileLocation)
+	data, err := ioutil.ReadFile(getConfigLocation())
 	if err != nil {
 		log.Printf("Error reading config file: %s", err.Error())
 		return nil, err
@@ -66,4 +67,14 @@ func SaveConfig(config *Config) error {
 	}
 
 	return nil
+}
+
+func getConfigLocation() string {
+	fileLocation, ok := os.LookupEnv(configFileENV)
+	if !ok {
+		log.Printf("Could not find ENV for %s using %s", configFileENV, configFileLocation)
+		return configFileLocation
+	}
+
+	return fileLocation
 }
