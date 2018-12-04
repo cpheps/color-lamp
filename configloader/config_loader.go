@@ -2,8 +2,8 @@
 package configloader
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/pelletier/go-toml"
@@ -11,6 +11,7 @@ import (
 
 const (
 	configFileLocation = "./config/config.toml"
+	configFileENV      = "LAMP_CONFIG"
 )
 
 //LifeLineConfig represents "lifeline" part of config
@@ -35,15 +36,17 @@ type Config struct {
 
 //LoadConfig loads configuration file
 func LoadConfig() (*Config, error) {
-	data, err := ioutil.ReadFile(configFileLocation)
+	data, err := ioutil.ReadFile(getConfigLocation())
 	if err != nil {
-		return nil, fmt.Errorf("Error reading config file: %s", err.Error())
+		log.Printf("Error reading config file: %s", err.Error())
+		return nil, err
 	}
 
 	config := &Config{}
 	err = toml.Unmarshal(data, config)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing config: %s", err.Error())
+		log.Printf("Error parsing config: %s", err.Error())
+		return nil, err
 	}
 
 	return config, nil
@@ -53,13 +56,25 @@ func LoadConfig() (*Config, error) {
 func SaveConfig(config *Config) error {
 	data, err := toml.Marshal(config)
 	if err != nil {
-		return fmt.Errorf("Error marshaling config: %s", err.Error())
+		log.Printf("Error marshaling config: %s", err.Error())
+		return err
 	}
 
 	err = ioutil.WriteFile(configFileLocation, data, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("Error saving config file: %s", err.Error())
+		log.Printf("Error saving config file: %s", err.Error())
+		return err
 	}
 
 	return nil
+}
+
+func getConfigLocation() string {
+	fileLocation, ok := os.LookupEnv(configFileENV)
+	if !ok {
+		log.Printf("Could not find ENV for %s using %s", configFileENV, configFileLocation)
+		return configFileLocation
+	}
+
+	return fileLocation
 }

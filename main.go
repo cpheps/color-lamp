@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Running Color Lamp version")
+	log.Printf("Running Color Lamp")
 	var wg sync.WaitGroup
 	closeChan := make(chan bool, 1)
 	eventChan := setupButton(closeChan, &wg)
@@ -46,7 +46,7 @@ func main() {
 	for {
 		select {
 		case <-sigChan:
-			fmt.Println("Received interrupt")
+			log.Println("Received interrupt")
 			cleanup(&wg, newLamp, closeChan)
 			return
 		case <-serverTicker:
@@ -59,11 +59,11 @@ func main() {
 		case event := <-eventChan:
 			if event == buttoncontroller.PressedEvent {
 				if err := client.SetClusterColor(config.LifeLineConfig.ClusterName, newLamp.GetLampColor()); err != nil {
-					fmt.Println("Error setting cluster color:", err.Error())
+					log.Println("Error setting cluster color:", err.Error())
 				}
 				err := newLamp.SetCurrentColor(newLamp.GetLampColor())
 				if err != nil {
-					fmt.Println("Error setting Lamp color:", err.Error())
+					log.Println("Error setting Lamp color:", err.Error())
 				} else {
 					override = true
 				}
@@ -72,7 +72,7 @@ func main() {
 
 			// If not press then hold
 			// run shutdown command in defer so lamp clean up happens.
-			fmt.Println("Shutting down")
+			log.Println("Shutting down")
 			cmd := "sudo shutdown -h now"
 			defer exec.Command("/bin/sh", "-c", cmd).Run()
 			cleanup(&wg, newLamp, closeChan)
@@ -96,12 +96,14 @@ func cleanup(wg *sync.WaitGroup, newLamp *lamp.Lamp, closeChan chan<- bool) {
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
 	ledControl, err := ledcontrol.CreateLEDControl(ledcontrol.DefaultPin, 16, ledcontrol.FullBrightness)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating LEDControl: %s", err.Error())
+		log.Printf("Error creating LEDControl: %s", err.Error())
+		return nil, err
 	}
 
 	err = ledControl.Init()
 	if err != nil {
-		return nil, fmt.Errorf("Error initializing LED Control: %s", err.Error())
+		log.Printf("Error initializing LED Control: %s", err.Error())
+		return nil, err
 	}
 
 	return ledControl, nil
@@ -124,18 +126,18 @@ func setupClient(config *configloader.LifeLineConfig) *lampclient.LampClient {
 func queryAndUpdate(client *lampclient.LampClient, lamp *lamp.Lamp, clusterID string) {
 	color, err := client.GetClusterColor(clusterID)
 	if err != nil {
-		fmt.Println("Error getting cluster color:", err.Error())
+		log.Println("Error getting cluster color:", err.Error())
 		return
 	}
 
 	if *color != lamp.GetCurrentColor() {
 		err = lamp.SetCurrentColor(*color)
 		if err != nil {
-			fmt.Println("Error setting Lamp color:", err.Error())
+			log.Println("Error setting Lamp color:", err.Error())
 			return
 		}
 	}
-	fmt.Println("Set Lamp color to:", *color)
+	log.Println("Set Lamp color to:", *color)
 }
 
 func setupButton(closeChan <-chan bool, wg *sync.WaitGroup) <-chan buttoncontroller.ButtonEvent {
@@ -146,11 +148,9 @@ func setupButton(closeChan <-chan bool, wg *sync.WaitGroup) <-chan buttoncontrol
 	return buttoncontroller.HandleButton(toggleButton, closeChan, wg)
 }
 
-// TODO change this logic so it doesn't exit on a failure. Rather log
-// all failures and continue on if possible
 func checkErr(err error) {
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 }
