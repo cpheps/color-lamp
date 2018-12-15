@@ -28,5 +28,5 @@ package:
 	mkdir package/scripts
 	cp scripts/wps_script.sh package/scripts/
 	cp -r config package/
-
+	cd package; zip -r ../color_lamp_package.zip *
 	
