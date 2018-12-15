@@ -1,0 +1,13 @@
+[Unit]
+Description=Color Lamp
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/color_lamp
+Restart=always
+EnvironmentFile=/etc/systemd/system/color_lamp.conf
+
+[Install]
+WantedBy=multi-user.target
