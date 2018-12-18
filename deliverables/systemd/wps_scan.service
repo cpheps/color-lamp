@@ -1,0 +1,10 @@
+[Unit]
+Description=WPS Scan
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/wps_script.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -94,7 +94,7 @@ func cleanup(wg *sync.WaitGroup, newLamp *lamp.Lamp, closeChan chan<- bool) {
 }
 
 func setupLEDControl() (*ledcontrol.LEDControl, error) {
-	ledControl, err := ledcontrol.CreateLEDControl(ledcontrol.DefaultPin, 16, ledcontrol.FullBrightness)
+	ledControl, err := ledcontrol.CreateLEDControl(ledcontrol.DefaultPin, 30, ledcontrol.FullBrightness)
 	if err != nil {
 		log.Printf("Error creating LEDControl: %s", err.Error())
 		return nil, err
