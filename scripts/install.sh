@@ -17,6 +17,7 @@ cp config/config.toml /home/pi/
 # Copy WPS files
 echo Copying WPS Files
 cp scripts/wps_script.sh /home/pi/
+chmod +x /home/pi/wps_script.sh
 
 # Copy systemd
 echo Copying Service Files
@@ -26,3 +27,5 @@ cp systemd/* /etc/systemd/system
 echo Enabling services
 systemctl enable color_lamp
 systemctl enable wps_scan
+systemctl enable  systemd-networkd.service
+systemctl enable  systemd-networkd-wait-online.service
